@@ -1,0 +1,49 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  # To create the GitHub release and upload its artifacts.
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      # tools/go.mod, not go.mod: this job runs `make check`, which needs golangci-lint. See
+      # ci.yml and CONTRIBUTING.md's Linting section for why the two floors differ.
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: tools/go.mod
+          cache: true
+          cache-dependency-path: |
+            go.sum
+            tools/go.sum
+
+      # Re-run the full suite against the exact commit being released: CI's own push trigger
+      # only fires on branch pushes, not tag pushes, so this is not otherwise guaranteed to
+      # have run against this commit.
+      - run: make check
+        env:
+          QR_API_KEY: ${{ secrets.QR_API_KEY }}
+          QR_API_INTEGRATION_REQUIRED: true
+
+      - uses: goreleaser/goreleaser-action@v6
+        with:
+          distribution: goreleaser
+          version: latest
+          args: release --clean
+        env:
+          # Creates the GitHub release on this repo.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Pushes the generated formula to qrocodile-io/homebrew-tap — a separate repo, which
+          # the default GITHUB_TOKEN above has no access to. A fine-grained PAT scoped to just
+          # that repo's contents, stored as its own secret.
+          HOMEBREW_TAP_GITHUB_TOKEN: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN }}

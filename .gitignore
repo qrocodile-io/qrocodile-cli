@@ -1,0 +1,14 @@
+.env
+.env.*
+
+# Go
+/bin/
+/tools/bin/
+*.exe
+*.test
+
+# GoReleaser's local build output (`goreleaser release --snapshot --clean`)
+/dist/
+
+# IDE / OS
+.DS_Store

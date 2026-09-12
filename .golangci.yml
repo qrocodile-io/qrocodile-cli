@@ -1,0 +1,11 @@
+version: "2"
+
+linters:
+  settings:
+    errcheck:
+      # Writes to the user's own stdout/stderr have no reasonable recovery action, and this
+      # CLI does dozens of them for ordinary output — checking each one is noise, not safety.
+      exclude-functions:
+        - fmt.Fprint
+        - fmt.Fprintln
+        - fmt.Fprintf
