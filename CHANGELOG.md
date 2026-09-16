@@ -2,7 +2,7 @@
 
 Notable changes to `qrocodile`. Versions follow [SemVer](https://semver.org/), with the usual pre-1.0 caveat: while the major is `0`, a **minor** bump may carry breaking changes.
 
-## Unreleased
+## 0.1.0
 
 ### Added
 
