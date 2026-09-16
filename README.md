@@ -4,6 +4,14 @@ Generate styled QR codes (SVG or PNG) from a terminal, script, or CI pipeline, v
 
 ## Install
 
+### Homebrew (macOS/Linux)
+
+```bash
+brew install qrocodile-io/tap/qrocodile
+```
+
+### Go
+
 ```
 go install github.com/qrocodile-io/qrocodile-cli/cmd/qrocodile@latest
 ```
