@@ -170,3 +170,57 @@ func TestRunGenerate_marginBelowOne(t *testing.T) {
 		t.Fatalf("err = %v, want a --margin error", err)
 	}
 }
+
+// Every example in generate's --help must pass the CLI's own flag checks.
+func TestRunGenerate_helpExamplesAreValid(t *testing.T) {
+	fakeRenderAPI(t, nil)
+	examples := 0
+	for _, line := range strings.Split(generateCmd.Long, "\n") {
+		rest, ok := strings.CutPrefix(strings.TrimSpace(line), "qrocodile generate ")
+		if !ok {
+			continue
+		}
+		examples++
+		t.Run(rest, func(t *testing.T) {
+			resetGenerateFlags(t)
+			args := splitExampleArgs(t, rest)
+			must(t, generateCmd.ParseFlags(args))
+			// Keep the example's -o out of the working directory.
+			must(t, generateCmd.Flags().Set("output", t.TempDir()+"/out"))
+			runGenerateCapturing(t)
+		})
+	}
+	if examples == 0 {
+		t.Fatal("found no examples in generate's --help")
+	}
+}
+
+// splitExampleArgs splits a help example into arguments, honoring double quotes.
+func splitExampleArgs(t *testing.T, s string) []string {
+	t.Helper()
+	var args []string
+	var cur strings.Builder
+	inQuotes, inArg := false, false
+	for _, r := range s {
+		switch {
+		case r == '"':
+			inQuotes, inArg = !inQuotes, true
+		case r == ' ' && !inQuotes:
+			if inArg {
+				args = append(args, cur.String())
+				cur.Reset()
+				inArg = false
+			}
+		default:
+			cur.WriteRune(r)
+			inArg = true
+		}
+	}
+	if inQuotes {
+		t.Fatalf("unbalanced quotes in %q", s)
+	}
+	if inArg {
+		args = append(args, cur.String())
+	}
+	return args
+}

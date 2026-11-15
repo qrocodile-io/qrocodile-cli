@@ -49,7 +49,7 @@ var generateCmd = &cobra.Command{
 
   qrocodile generate "https://example.com"
   qrocodile generate "https://example.com" --preset ocean -o code.png --format png
-  qrocodile generate "https://example.com" --module-style woodwork --finder-style diamond --logo website
+  qrocodile generate "https://example.com" --module-style woodwork --finder-style diamond --logo website --logo-color "#000000"
 
 After rendering, a link that opens the same code in the QR Designer is printed to stderr.
 Use --open to open it in your browser, or --no-designer-url to leave it out.`,
