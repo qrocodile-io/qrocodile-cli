@@ -11,8 +11,8 @@ import (
 	"github.com/qrocodile-io/qrocodile-cli/internal/config"
 )
 
-// EnvAPIKey always overrides the stored key — the load-bearing mechanism for CI use, matching
-// GH_TOKEN/AWS_ACCESS_KEY_ID conventions.
+// EnvAPIKey always overrides the stored key, so CI jobs and scripts never need `auth login`.
+// It follows the GH_TOKEN/AWS_ACCESS_KEY_ID convention.
 const EnvAPIKey = "QROCODILE_API_KEY"
 
 // EnvBaseURL overrides the API base URL, e.g. to target a dev/staging instance.

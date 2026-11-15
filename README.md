@@ -22,7 +22,7 @@ go install github.com/qrocodile-io/qrocodile-cli/cmd/qrocodile@latest
 qrocodile auth login
 ```
 
-Walks you through the email + 6-digit code signup — free, no card required — and stores the key locally once confirmed. Already have a key from elsewhere ([the website](https://qrocodile.io), [`@qrocodile/api`](https://www.npmjs.com/package/@qrocodile/api), [`qrocodile-api-go`](https://github.com/qrocodile-io/qrocodile-api-go))? Pipe it in instead:
+Walks you through the email + 6-digit code signup (free, no card required) and stores the key locally once confirmed. Already have a key from elsewhere ([the website](https://qrocodile.io), [`@qrocodile/api`](https://www.npmjs.com/package/@qrocodile/api), [`qrocodile-api-go`](https://github.com/qrocodile-io/qrocodile-api-go))? Pipe it in instead:
 
 ```
 echo "$KEY" | qrocodile auth login --with-key
@@ -45,15 +45,15 @@ qrocodile generate "https://example.com" --preset ocean -o code.svg
 # PNG instead of SVG
 qrocodile generate "https://example.com" --format png -o code.png
 
-# a full design exported from the QR Designer's "Copy JSON" button — a file, stdin (-), or the JSON itself
+# a full design exported from the QR Designer's "Copy JSON" button: a file, stdin (-), or the JSON itself
 qrocodile generate "https://example.com" --design my-design.json -o code.png --format png
 qrocodile generate "https://example.com" --design '{"preset":"ocean","margin":4}' -o code.png --format png
 
-# recolor a preset — flags set alongside --preset/--design override their values
+# recolor a preset: flags set alongside --preset/--design override their values
 qrocodile generate "https://example.com" --preset classic --module-color "#ff0000"
 
-# module shape, finder-corner shape, and a built-in logo (--logo needs --logo-color — the
-# API has no "use the icon's original colors" option)
+# module shape, finder-corner shape, and a built-in logo (--logo needs --logo-color, because
+# the API has no "use the icon's original colors" option)
 qrocodile generate "https://example.com" --module-style woodwork --finder-style morphing --logo website --logo-color "#000000"
 
 # recolor the finder corners independently of the modules, and force a higher error
@@ -63,11 +63,13 @@ qrocodile generate "https://example.com" --finder-frame-color "#1b4332" --finder
 
 `--preset`, `--module-style`, `--finder-style`, `--logo`, and `--error-correction` all tab-complete their valid values.
 
-`-o` writes exactly the bytes produced to that path (or `-` for stdout, unconditionally). With no `-o` at all: SVG prints to stdout; PNG does too when stdout isn’t a terminal (so `qrocodile generate ... --format png > code.png` works), but refuses to print raw PNG bytes to an interactive terminal — same guard `curl` uses for binary responses.
+`-o` writes exactly the bytes produced to that path (or `-` for stdout, unconditionally). With no `-o` at all: SVG prints to stdout; PNG does too when stdout isn’t a terminal (so `qrocodile generate ... --format png > code.png` works), but refuses to print raw PNG bytes to an interactive terminal, the same guard `curl` uses for binary responses.
+
+Full flag reference: `qrocodile generate --help`.
 
 ### Keep editing in the QR Designer
 
-After rendering, `generate` prints a link to stderr that opens the same code, design and content, in the [QR Designer](https://qrocodile.io/en/). Tweak it there, choose “Copy JSON”, and pass the result back with `--design`.
+After rendering, `generate` prints a link to stderr that opens the same code (design and content) in the [QR Designer](https://qrocodile.io/en/). Tweak it there, choose “Copy JSON”, and pass the result back with `--design`.
 
 ```sh
 qrocodile generate "https://example.com" --preset ocean -o code.svg
@@ -78,8 +80,6 @@ qrocodile generate "https://example.com" --preset ocean -o code.svg --open
 ```
 
 The link goes to stderr, so it never mixes into an image written to stdout. `--no-designer-url` leaves it out. When the API can’t build a link that reproduces the code exactly (an uploaded logo, or content too long for a link), `generate` says why instead.
-
-Full flag reference: `qrocodile generate --help`.
 
 ## Authentication in scripts and CI
 

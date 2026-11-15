@@ -43,7 +43,7 @@ jobs:
         env:
           # Creates the GitHub release on this repo.
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Pushes the generated formula to qrocodile-io/homebrew-tap — a separate repo, which
-          # the default GITHUB_TOKEN above has no access to. A fine-grained PAT scoped to just
-          # that repo's contents, stored as its own secret.
+          # Pushes the generated formula to qrocodile-io/homebrew-tap, a separate repository the
+          # default GITHUB_TOKEN above has no access to. A fine-grained PAT scoped to that
+          # repository's contents, stored as its own secret.
           HOMEBREW_TAP_GITHUB_TOKEN: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN }}

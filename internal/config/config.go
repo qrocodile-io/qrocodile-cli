@@ -25,8 +25,8 @@ type Config struct {
 	Credential *Credential `json:"credential,omitempty"`
 }
 
-// APIKey returns the stored API key, or "" if none is stored (or the stored credential isn't
-// an API key — not possible yet, but Load never rejects a config file over it).
+// APIKey returns the stored API key, or "" if none is stored or the stored credential isn't
+// an API key. No other kind exists yet, but Load never rejects a config file over it.
 func (c *Config) APIKey() string {
 	if c == nil || c.Credential == nil || c.Credential.Type != CredentialTypeAPIKey {
 		return ""
@@ -34,8 +34,8 @@ func (c *Config) APIKey() string {
 	return c.Credential.Value
 }
 
-// Path returns the config file's location: the OS-appropriate config directory, same tier as
-// `gh`'s ~/.config/gh/hosts.yml or `aws`'s ~/.aws/credentials — a plain file, not the OS
+// Path returns the config file's location in the OS-appropriate config directory, like `gh`'s
+// ~/.config/gh/hosts.yml or `aws`'s ~/.aws/credentials. It is a plain file, not the OS
 // keychain.
 func Path() (string, error) {
 	dir, err := os.UserConfigDir()
@@ -45,7 +45,7 @@ func Path() (string, error) {
 	return filepath.Join(dir, "qrocodile", "config.json"), nil
 }
 
-// Load reads the config file. A missing file is not an error — it means nothing is stored yet.
+// Load reads the config file. A missing file is not an error: it means nothing is stored yet.
 func Load() (*Config, error) {
 	path, err := Path()
 	if err != nil {

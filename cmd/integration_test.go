@@ -9,7 +9,7 @@ import (
 
 // TestIntegration_Generate exercises `generate` against a real API instance. Skipped unless
 // QR_API_KEY is set (translated into this CLI's own QROCODILE_API_KEY/QROCODILE_API_BASE_URL
-// env vars for the duration of the test) — QR_API_KEY/QR_API_URL is the convention shared with
+// env vars for the duration of the test). QR_API_KEY/QR_API_URL is the convention shared with
 // qrocodile-api-go's own integration test, so both repos read the same local .env during
 // development. Set QR_API_INTEGRATION_REQUIRED=true to fail instead of skip.
 func TestIntegration_Generate(t *testing.T) {

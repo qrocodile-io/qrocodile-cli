@@ -24,8 +24,8 @@ var authLoginCmd = &cobra.Command{
 
 With no flags, walks the email + 6-digit code signup flow and stores the key it receives.
 
---with-key reads an existing key from stdin instead — for a key obtained elsewhere (the
-website, @qrocodile/api directly), or for scripting:
+--with-key reads an existing key from stdin instead, for a key you got elsewhere (the
+website, @qrocodile/api) or for scripting:
 
   echo "$KEY" | qrocodile auth login --with-key`,
 	Args: cobra.NoArgs,
@@ -42,9 +42,8 @@ func init() {
 }
 
 func loginWithKey(cmd *cobra.Command) error {
-	// The prompt goes to stderr, not stdout, so a script piping stdout elsewhere (there's
-	// nothing worth capturing from this command, but the convention is worth keeping
-	// consistent) doesn't see it — same split as loginInteractive's prompts below.
+	// The prompt goes to stderr, like loginInteractive's prompts, so it stays out of anything
+	// reading stdout.
 	fmt.Fprint(cmd.ErrOrStderr(), "Paste your API key, then press Enter: ")
 	// A single line, not io.ReadAll: reading to EOF would block forever on an interactive
 	// terminal (EOF there is Ctrl+D, not Enter) even though piped input works fine either way.
@@ -77,10 +76,9 @@ func loginInteractive(cmd *cobra.Command) error {
 
 	client := apiclient.Unauthenticated()
 
-	// Each API call gets its own fresh timeout, created right before that call — sharing one
-	// across both would also cover the time the human spends reading their email and typing
-	// the code in between, which routinely exceeds any reasonable request timeout and has
-	// nothing to do with whether either request is actually slow.
+	// Each API call gets its own timeout, created right before it. One shared timeout would
+	// also count the time spent reading the email and typing the code, which can easily exceed
+	// any reasonable request timeout.
 	registerCtx, cancelRegister := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancelRegister()
 	if _, err := client.RegisterKey(registerCtx, email, ""); err != nil {

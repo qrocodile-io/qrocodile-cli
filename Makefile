@@ -25,9 +25,9 @@ fmt-check:
 # only pays the `go install` cost when tools/go.mod or tools/go.sum actually changed.
 tools: tools/bin/.stamp
 
-# golangci-lint lives in tools/go.mod, a separate module — see CONTRIBUTING.md — so its own
-# Go-version requirement never raises the floor this module's consumers need, and its huge
-# transitive dependency tree never pollutes this module's go.mod/go.sum.
+# golangci-lint lives in tools/go.mod, a separate module (see CONTRIBUTING.md), so its own
+# Go-version requirement never raises the floor this module needs, and its large dependency
+# tree stays out of this module's go.mod/go.sum.
 tools/bin/.stamp: tools/go.mod tools/go.sum
 	cd tools && GOBIN="$(CURDIR)/tools/bin" go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint
 	@touch tools/bin/.stamp

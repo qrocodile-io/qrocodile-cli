@@ -227,7 +227,7 @@ func TestBuildDesign_errorCorrection(t *testing.T) {
 	}
 }
 
-// "auto" isn't a real API enum value — it means omit the field — so --error-correction auto
+// "auto" isn't a real API enum value (it means omit the field), so --error-correction auto
 // must never end up sending the literal string "auto" to the API.
 func TestBuildDesign_errorCorrectionAutoOmitsField(t *testing.T) {
 	resetGenerateFlags(t)

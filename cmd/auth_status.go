@@ -15,8 +15,8 @@ var authStatusCmd = &cobra.Command{
 	Short: "Show whether an API key is configured",
 	Long: `Show whether an API key is configured.
 
-Reports only that a key is stored, not whether it's still valid — the API has no
-introspection endpoint to check that against without spending a real request.`,
+Reports only that a key is stored, not whether it’s still valid: checking would cost a
+real API request.`,
 	Args: cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		out := cmd.OutOrStdout()

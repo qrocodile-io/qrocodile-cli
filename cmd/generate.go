@@ -54,9 +54,9 @@ var generateCmd = &cobra.Command{
 After rendering, a link that opens the same code in the QR Designer is printed to stderr.
 Use --open to open it in your browser, or --no-designer-url to leave it out.`,
 	// A custom message rather than cobra.ExactArgs(1)'s generic "accepts 1 arg(s), received 0":
-	// SilenceUsage is on globally (see root.go) so a runtime error — not logged in, an API
-	// failure — doesn't dump the full flag reference underneath it. That means an argument
-	// error needs to be self-explanatory on its own, since no usage block follows it either.
+	// SilenceUsage is on globally (see root.go) so a runtime error (not logged in, an API
+	// failure) doesn't print the full flag reference underneath it. That means an argument
+	// error has to explain itself, since no usage block follows it either.
 	Args: func(cmd *cobra.Command, args []string) error {
 		if len(args) != 1 {
 			return fmt.Errorf(`requires exactly one argument: the content to encode, e.g.:
@@ -75,9 +75,9 @@ func init() {
 	generateCmd.Flags().StringVar(&genPreset, "preset", "", "a built-in design preset")
 	generateCmd.Flags().StringVar(&genModuleStyle, "module-style", "", "shape the modules (the pattern) are drawn with")
 	generateCmd.Flags().StringVar(&genFinderStyle, "finder-style", "", "shape the three corner finders are drawn with")
-	generateCmd.Flags().StringVar(&genLogo, "logo", "", "a built-in logo icon to place on the code — requires --logo-color, the API has no \"original colors\" option")
+	generateCmd.Flags().StringVar(&genLogo, "logo", "", "a built-in logo icon to place on the code; requires --logo-color, because the API has no “original colors” option")
 	generateCmd.Flags().StringVar(&genLogoColor, "logo-color", "", "color to recolor --logo to, e.g. #000000")
-	generateCmd.Flags().StringVar(&genDesign, "design", "", "a full design: a JSON file path, - for stdin, or the JSON object itself, e.g. from the QR Designer's \"Copy JSON\"")
+	generateCmd.Flags().StringVar(&genDesign, "design", "", "a full design: a JSON file path, - for stdin, or the JSON object itself, e.g. from the QR Designer’s “Copy JSON”")
 	registerValueCompletion(generateCmd, "format", func() []string { return []string{"svg", "png"} })
 	registerValueCompletion(generateCmd, "preset", func() []string { return idStrings(qrocodile.PresetIDs()) })
 	registerValueCompletion(generateCmd, "module-style", func() []string { return idStrings(qrocodile.ModuleStyleIDs()) })
@@ -86,11 +86,11 @@ func init() {
 	generateCmd.Flags().IntVar(&genSize, "size", 0, "image width/height in pixels")
 	generateCmd.Flags().IntVar(&genMargin, "margin", -1, "quiet zone in modules")
 	generateCmd.Flags().StringVar(&genModuleColor, "module-color", "", "module (foreground) color, e.g. #000000")
-	generateCmd.Flags().StringVar(&genBackground, "background", "", "background color, e.g. #ffffff, or \"transparent\"")
-	generateCmd.Flags().StringVar(&genErrorCorrection, "error-correction", "", "error correction level: L, M, Q, or H — or auto (the default) to resolve it from the logo/style, e.g. to override a level set by --design")
+	generateCmd.Flags().StringVar(&genBackground, "background", "", "background color, e.g. #ffffff, or “transparent”")
+	generateCmd.Flags().StringVar(&genErrorCorrection, "error-correction", "", "error correction level: L, M, Q, or H, or auto (the default) to resolve it from the logo or style, which also clears a level set by --design")
 	registerValueCompletion(generateCmd, "error-correction", func() []string { return []string{"auto", "L", "M", "Q", "H"} })
-	generateCmd.Flags().StringVar(&genFinderFrameColor, "finder-frame-color", "", "color of the finder corners' outer frame, e.g. #000000")
-	generateCmd.Flags().StringVar(&genFinderEyeColor, "finder-eye-color", "", "color of the finder corners' inner eye, e.g. #000000")
+	generateCmd.Flags().StringVar(&genFinderFrameColor, "finder-frame-color", "", "color of the finder corners’ outer frame, e.g. #000000")
+	generateCmd.Flags().StringVar(&genFinderEyeColor, "finder-eye-color", "", "color of the finder corners’ inner eye, e.g. #000000")
 	generateCmd.Flags().BoolVar(&genFixContrast, "fix-contrast", true, "nudge low-contrast colors apart so the code stays scannable")
 	generateCmd.Flags().StringVarP(&genOutput, "output", "o", "", "output path, or - for stdout (default: stdout)")
 	generateCmd.Flags().BoolVar(&genOpen, "open", false, "open the rendered code in the QR Designer in your browser")
@@ -98,18 +98,16 @@ func init() {
 	generateCmd.MarkFlagsMutuallyExclusive("open", "no-designer-url")
 }
 
-// registerValueCompletion wires a flag's shell completion to values(), called lazily at
-// completion time rather than at init — the enum-ID flags' values() calls the SDK's generated
-// value lists, which only need to exist, not be fetched from the network; still no reason to
-// pay for it before a shell actually asks.
+// registerValueCompletion wires a flag's shell completion to values(), which runs only when a
+// shell asks for completions, not at init.
 func registerValueCompletion(cmd *cobra.Command, flag string, values func() []string) {
 	_ = cmd.RegisterFlagCompletionFunc(flag, func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		return values(), cobra.ShellCompDirectiveNoFileComp
 	})
 }
 
-// idStrings converts a slice of the SDK's string-based ID types (qrocodile.PresetID and
-// friends) to plain strings, which is what cobra's completion API takes.
+// idStrings converts a slice of qrocodile-api-go's string-based ID types (qrocodile.PresetID
+// and the like) to the plain strings cobra's completion API takes.
 func idStrings[T ~string](ids []T) []string {
 	out := make([]string, len(ids))
 	for i, id := range ids {
@@ -129,9 +127,9 @@ func runGenerate(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("--format must be svg or png, got %q", genFormat)
 	}
 
-	// The API requires both fields together for a built-in logo — there's no "use the icon's
-	// original colors" option — so enforce the pairing here rather than let it round-trip to a
-	// confusing 400 from the API.
+	// The API requires both fields together for a built-in logo (it has no "use the icon's
+	// original colors" option), so enforce the pairing here instead of sending the request and
+	// getting a confusing 400 back.
 	if flags.Changed("logo") != flags.Changed("logo-color") {
 		return fmt.Errorf("--logo and --logo-color must be set together")
 	}
