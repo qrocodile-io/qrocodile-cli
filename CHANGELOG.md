@@ -2,6 +2,19 @@
 
 Notable changes to `qrocodile`. Versions follow [SemVer](https://semver.org/), with the usual pre-1.0 caveat: while the major is `0`, a **minor** bump may carry breaking changes.
 
+## Unreleased
+
+### Added
+
+- `generate` prints a link to stderr that opens the rendered code in the QR Designer, or says why there is none. `--open` opens it in your browser instead, and `--no-designer-url` leaves it out.
+- `--preset` accepts `retroConsole`, `cityLights`, `goldenHour`, `snowfall`, `winterNight`, `gingerbread`, and `christmasTree`; `--module-style` accepts `knit`, `bokeh`, `snowfall`, `gingerbread`, and `christmas-tree`; `--finder-style` accepts `bokeh`.
+
+### Changed
+
+- **Breaking:** the `christmas` preset is now called `christmasSweater`, following the API. Designs and scripts that use `christmas` need to switch.
+- `--margin` must be at least 1, since the API no longer accepts 0.
+- Colors, in flags and in `--design`, accept only `#rgb` and `#rrggbb`; the API no longer accepts `#rrggbbaa`.
+
 ## 0.1.0
 
 ### Added

@@ -65,6 +65,20 @@ qrocodile generate "https://example.com" --finder-frame-color "#1b4332" --finder
 
 `-o` writes exactly the bytes produced to that path (or `-` for stdout, unconditionally). With no `-o` at all: SVG prints to stdout; PNG does too when stdout isn’t a terminal (so `qrocodile generate ... --format png > code.png` works), but refuses to print raw PNG bytes to an interactive terminal — same guard `curl` uses for binary responses.
 
+### Keep editing in the QR Designer
+
+After rendering, `generate` prints a link to stderr that opens the same code, design and content, in the [QR Designer](https://qrocodile.io/en/). Tweak it there, choose “Copy JSON”, and pass the result back with `--design`.
+
+```sh
+qrocodile generate "https://example.com" --preset ocean -o code.svg
+# Edit in the QR Designer: https://qrocodile.io/?preset=ocean&…
+
+# open the link in your browser instead of printing it
+qrocodile generate "https://example.com" --preset ocean -o code.svg --open
+```
+
+The link goes to stderr, so it never mixes into an image written to stdout. `--no-designer-url` leaves it out. When the API can’t build a link that reproduces the code exactly (an uploaded logo, or content too long for a link), `generate` says why instead.
+
 Full flag reference: `qrocodile generate --help`.
 
 ## Authentication in scripts and CI

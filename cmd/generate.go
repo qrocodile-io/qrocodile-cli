@@ -14,6 +14,7 @@ import (
 	"github.com/spf13/pflag"
 
 	"github.com/qrocodile-io/qrocodile-cli/internal/apiclient"
+	"github.com/qrocodile-io/qrocodile-cli/internal/browser"
 	"github.com/qrocodile-io/qrocodile-cli/internal/output"
 )
 
@@ -34,7 +35,12 @@ var (
 	genFinderEyeColor   string
 	genFixContrast      bool
 	genOutput           string
+	genOpen             bool
+	genNoDesignerURL    bool
 )
+
+// openBrowser is swapped out in tests.
+var openBrowser = browser.Open
 
 var generateCmd = &cobra.Command{
 	Use:   "generate <content>",
@@ -43,7 +49,10 @@ var generateCmd = &cobra.Command{
 
   qrocodile generate "https://example.com"
   qrocodile generate "https://example.com" --preset ocean -o code.png --format png
-  qrocodile generate "https://example.com" --module-style woodwork --finder-style diamond --logo website`,
+  qrocodile generate "https://example.com" --module-style woodwork --finder-style diamond --logo website
+
+After rendering, a link that opens the same code in the QR Designer is printed to stderr.
+Use --open to open it in your browser, or --no-designer-url to leave it out.`,
 	// A custom message rather than cobra.ExactArgs(1)'s generic "accepts 1 arg(s), received 0":
 	// SilenceUsage is on globally (see root.go) so a runtime error — not logged in, an API
 	// failure — doesn't dump the full flag reference underneath it. That means an argument
@@ -84,6 +93,9 @@ func init() {
 	generateCmd.Flags().StringVar(&genFinderEyeColor, "finder-eye-color", "", "color of the finder corners' inner eye, e.g. #000000")
 	generateCmd.Flags().BoolVar(&genFixContrast, "fix-contrast", true, "nudge low-contrast colors apart so the code stays scannable")
 	generateCmd.Flags().StringVarP(&genOutput, "output", "o", "", "output path, or - for stdout (default: stdout)")
+	generateCmd.Flags().BoolVar(&genOpen, "open", false, "open the rendered code in the QR Designer in your browser")
+	generateCmd.Flags().BoolVar(&genNoDesignerURL, "no-designer-url", false, "don’t print the QR Designer link to stderr")
+	generateCmd.MarkFlagsMutuallyExclusive("open", "no-designer-url")
 }
 
 // registerValueCompletion wires a flag's shell completion to values(), called lazily at
@@ -124,6 +136,11 @@ func runGenerate(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("--logo and --logo-color must be set together")
 	}
 
+	// Checked here so the error names the flag; the API would refuse it too.
+	if flags.Changed("margin") && genMargin < 1 {
+		return fmt.Errorf("--margin must be at least 1, got %d", genMargin)
+	}
+
 	design, err := buildDesign(cmd, flags)
 	if err != nil {
 		return err
@@ -144,21 +161,39 @@ func runGenerate(cmd *cobra.Command, args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	switch format {
-	case "svg":
-		svg, err := client.RenderSVG(ctx, input)
-		if err != nil {
-			return err
-		}
-		return output.Write(genOutput, []byte(svg), false, cmd.OutOrStdout())
-	case "png":
-		png, err := client.RenderPNG(ctx, input)
-		if err != nil {
-			return err
-		}
-		return output.Write(genOutput, png, true, cmd.OutOrStdout())
+	result, err := client.Render(ctx, qrocodile.Format(format), input)
+	if err != nil {
+		return err
 	}
-	panic("unreachable: format already validated")
+	if err := output.Write(genOutput, result.Image, format == "png", cmd.OutOrStdout()); err != nil {
+		return err
+	}
+	return reportDesignerURL(cmd.ErrOrStderr(), result)
+}
+
+// reportDesignerURL prints the rendered code's QR Designer link, or why there is none, to
+// stderr, so it never mixes into an image written to stdout. With --open it opens the link
+// instead.
+func reportDesignerURL(stderr io.Writer, result qrocodile.RenderResult) error {
+	if genNoDesignerURL {
+		return nil
+	}
+	if result.DesignerURL == "" {
+		reason := "the API sent no link"
+		if len(result.DesignerURLUnavailable) > 0 {
+			reason = "the link can’t carry " + strings.Join(result.DesignerURLUnavailable, ", ")
+		}
+		_, err := fmt.Fprintf(stderr, "No QR Designer link: %s\n", reason)
+		return err
+	}
+	if genOpen {
+		if err := openBrowser(result.DesignerURL); err != nil {
+			return fmt.Errorf("opening the QR Designer: %w; the link is %s", err, result.DesignerURL)
+		}
+		return nil
+	}
+	_, err := fmt.Fprintf(stderr, "Edit in the QR Designer: %s\n", result.DesignerURL)
+	return err
 }
 
 // buildDesign assembles the design JSON sent to the API from --design (a base object, if any)

@@ -3,7 +3,7 @@ module github.com/qrocodile-io/qrocodile-cli
 go 1.26.0
 
 require (
-	github.com/qrocodile-io/qrocodile-api-go v0.2.0
+	github.com/qrocodile-io/qrocodile-api-go v0.3.0
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/pflag v1.0.10
 )
